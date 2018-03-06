@@ -29,11 +29,9 @@ public class ComposerApplication {
     }
 
     private static Service bootstrapService() {
-        return bootstrap(
-            HttpService::usingAppInit,
-            (b, m) -> b.withModule(m))
-                .withEnvVarPrefix("COMPOSER")
-                .build();
+        return bootstrap(HttpService::usingAppInit, (b, m) -> b.withModule(m))
+            .withEnvVarPrefix("COMPOSER")
+            .build();
     }
 
     static <T> T bootstrap(final BiFunction<AppInit, String, T> init,
@@ -50,7 +48,7 @@ public class ComposerApplication {
             ErrorHandlingClientDecoratingModule.create());
     }
 
-    static class Initializer {
+    private static class Initializer {
 
         static void init(final Environment environment) {
             final Config configuration = withDefaults(environment.config());
