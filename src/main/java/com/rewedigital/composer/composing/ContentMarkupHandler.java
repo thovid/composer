@@ -1,9 +1,7 @@
 package com.rewedigital.composer.composing;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.attoparser.AbstractMarkupHandler;
 import org.attoparser.ParseException;
@@ -11,76 +9,9 @@ import org.attoparser.util.TextUtil;
 
 class ContentMarkupHandler extends AbstractMarkupHandler {
 
-    private static class Asset {
-        private final String type;
-        private final Map<String, String> attributes;
-        private final boolean selfClosing;
-
-        private Asset(final Builder builder) {
-            this.type = builder.type;
-            this.selfClosing = builder.selfClosing;
-            this.attributes = new HashMap<>(builder.attributes);
-        }
-
-        public static class Builder {
-            private String type;
-            private boolean selfClosing;
-            private final Map<String, String> attributes = new HashMap<>();
-
-            public Builder type(final String type) {
-                this.type = type;
-                return this;
-            }
-
-            public Builder attribute(final String name, final String value) {
-                this.attributes.put(name, value);
-                return this;
-            }
-
-            public Builder selfClosing(final boolean selfClosing) {
-                this.selfClosing = selfClosing;
-                return this;
-            }
-
-            public boolean attributeContainsInclude(final String attributeName) {
-                return attributes.getOrDefault(attributeName, "").contains("include");
-            }
-
-            public Asset build() {
-                return new Asset(this);
-            }
-        }
-
-        public String render() {
-            return attributes
-                .entrySet()
-                .stream()
-                .reduce(renderOpen(),
-                    (builder, e) -> builder.append(e.getKey())
-                        .append("=\"")
-                        .append(e.getValue())
-                        .append("\" "),
-                    (a, b) -> a.append(b))
-                .append(renderClosing()).toString();
-        }
-
-        private StringBuilder renderOpen() {
-            return new StringBuilder().append("<").append(type).append(" ");
-        }
-
-        private String renderClosing() {
-            if (selfClosing) {
-                return "/>";
-            }
-
-            return "></" + type + ">";
-        }
-    }
-
     private final char[] contentTag;
     private final String assetOptionsAttribute;
 
-    private final List<String> links = new LinkedList<>();
     private final List<Asset> assets = new LinkedList<>();
 
     private Asset.Builder current = null;
@@ -102,8 +33,8 @@ class ContentMarkupHandler extends AbstractMarkupHandler {
         return contentEnd <= 0 ? defaultContentRange : new ContentRange(contentStart, contentEnd);
     }
 
-    public List<String> assetLinks() {
-        return links;
+    public List<Asset> assets() {
+        return assets;
     }
 
     @Override
@@ -134,7 +65,7 @@ class ContentMarkupHandler extends AbstractMarkupHandler {
             parsingHead = true;
         } else if (isContentElement(buffer, nameOffset, nameLen)) {
             contentStart = nameOffset + nameLen + 1;
-        } else if (isAssetElement(buffer, nameOffset, nameLen) && parsingHead) {
+        } else if (parsingHead && isAssetElement(buffer, nameOffset, nameLen)) {
             startAsset(buffer, nameOffset, nameLen, false);
         }
     }
@@ -192,16 +123,14 @@ class ContentMarkupHandler extends AbstractMarkupHandler {
 
 
     private void startAsset(final char[] buffer, final int nameOffset, final int nameLen, final boolean selfClosing) {
-        current = new Asset.Builder()
+        current = new Asset.Builder(assetOptionsAttribute)
             .type(new String(buffer, nameOffset, nameLen))
             .selfClosing(selfClosing);
     }
 
     private void pushAsset() {
-        if (current.attributeContainsInclude(assetOptionsAttribute)) {
-            final Asset asset = current.build();
-            assets.add(asset);
-            links.add(asset.render());
+        if (current.isInclude()) {
+            assets.add(current.build());
         }
         current = null;
     }

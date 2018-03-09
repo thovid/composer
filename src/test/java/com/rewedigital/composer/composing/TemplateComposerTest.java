@@ -13,7 +13,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.rewedigital.composer.session.SessionRoot;
@@ -79,12 +78,6 @@ public class TemplateComposerTest {
     }
 
     @Test
-    @Ignore
-    public void allowsPushingScriptsToBotton() {
-
-    }
-
-    @Test
     public void composesRecursiveTemplate() throws Exception {
         final String innerContent = "some content";
         final TemplateComposer composer = makeComposer(
@@ -144,7 +137,7 @@ public class TemplateComposerTest {
     }
 
     @Test
-    public void setsNoStoreCacheHeaderIfNoCacheHeaderFromComposition() throws Exception{
+    public void setsNoStoreCacheHeaderIfNoCacheHeaderFromComposition() throws Exception {
         final TemplateComposer composer = makeComposer(aClientWithSimpleContent("content"));
 
         final Response<String> result = composer
