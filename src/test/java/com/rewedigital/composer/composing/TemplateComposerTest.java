@@ -13,6 +13,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.rewedigital.composer.session.SessionRoot;
@@ -61,6 +62,26 @@ public class TemplateComposerTest {
         assertThat(result.payload()).contains(
             "<head><link rel=\"stylesheet\" data-rd-options=\"include\" href=\"css/link\" />\n" +
                 "</head>");
+    }
+
+    @Test
+    public void appendsScriptLinksToHead() throws Exception {
+        final TemplateComposer composer = makeComposer(aClientWithSimpleContent("",
+            "<script src=\"js/link/script.js\" data-rd-options=\"include\" type=\"text/javascript\"></script>"));
+        final Response<String> result = composer
+            .composeTemplate(r("<head></head><include path=\"http://mock/\"></include>"),
+                "template-path")
+            .get().response();
+        assertThat(result.payload()).contains(
+            "<head><script data-rd-options=\"include\" type=\"text/javascript\" src=\"js/link/script.js\" ></script>\n"
+                +
+                "</head>");
+    }
+
+    @Test
+    @Ignore
+    public void allowsPushingScriptsToBotton() {
+
     }
 
     @Test
@@ -121,7 +142,7 @@ public class TemplateComposerTest {
             .get().response();
         assertThat(result.payload()).contains(fallbackContent);
     }
-    
+
     @Test
     public void setsNoStoreCacheHeaderIfNoCacheHeaderFromComposition() throws Exception{
         final TemplateComposer composer = makeComposer(aClientWithSimpleContent("content"));
