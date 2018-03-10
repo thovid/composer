@@ -2,7 +2,9 @@ package com.rewedigital.composer.composing;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 public class Asset {
     public static class Builder {
@@ -44,11 +46,13 @@ public class Asset {
         }
     }
 
+    private final String optionsAttributeName;
     private final String type;
     private final Map<String, String> attributes;
     private final boolean selfClosing;
 
     private Asset(final Asset.Builder builder) {
+        this.optionsAttributeName = builder.optionsAttributeName;
         this.type = builder.type;
         this.selfClosing = builder.selfClosing;
         this.attributes = new HashMap<>(builder.attributes);
@@ -58,6 +62,7 @@ public class Asset {
         return attributes
             .entrySet()
             .stream()
+            .filter(notOptionsAttribute())
             .reduce(new StringBuilder().append(renderOpen()),
                 (builder, e) -> builder.append(e.getKey())
                     .append("=\"")
@@ -65,6 +70,10 @@ public class Asset {
                     .append("\" "),
                 (a, b) -> a.append(b))
             .append(renderClosing()).toString();
+    }
+
+    private Predicate<? super Entry<String, String>> notOptionsAttribute() {
+        return e -> !e.getKey().equals(optionsAttributeName);
     }
 
     @Override

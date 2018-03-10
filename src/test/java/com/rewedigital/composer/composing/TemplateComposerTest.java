@@ -59,7 +59,7 @@ public class TemplateComposerTest {
                 "template-path")
             .get().response();
         assertThat(result.payload()).contains(
-            "<head><link rel=\"stylesheet\" data-rd-options=\"include\" href=\"css/link\" />\n" +
+            "<head><link rel=\"stylesheet\" href=\"css/link\" />\n" +
                 "</head>");
     }
 
@@ -72,7 +72,7 @@ public class TemplateComposerTest {
                 "template-path")
             .get().response();
         assertThat(result.payload()).contains(
-            "<head><script data-rd-options=\"include\" type=\"text/javascript\" src=\"js/link/script.js\" ></script>\n"
+            "<head><script type=\"text/javascript\" src=\"js/link/script.js\" ></script>\n"
                 +
                 "</head>");
     }
