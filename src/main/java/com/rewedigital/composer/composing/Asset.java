@@ -6,7 +6,11 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-public class Asset {
+/**
+ * Describes a <code>link</code> or <code>script</code> tag found in an html <code>head</code> section during parsing of
+ * a template or content fragment.
+ */
+class Asset {
     public static class Builder {
 
         private final String optionsAttributeName;
@@ -90,13 +94,9 @@ public class Asset {
         if (getClass() != obj.getClass())
             return false;
         final Asset other = (Asset) obj;
-        if (!attributes.equals(other.attributes))
-            return false;
-        if (selfClosing != other.selfClosing)
-            return false;
-        if (!type.equals(other.type))
-            return false;
-        return true;
+        return selfClosing == other.selfClosing &&
+            Objects.equals(attributes, other.attributes) &&
+            Objects.equals(type, other.type);
     }
 
     @Override
