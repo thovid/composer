@@ -14,7 +14,7 @@ import com.spotify.apollo.RequestContext;
 import com.typesafe.config.Config;
 
 /**
- * A {@link SessionHandler.Interceptor} that assigns a session id and manages a time to live.
+ * A {@link SessionHandler.Interceptor} that assigns a session id and manages a time-to-live.
  */
 public class LocalSessionIdInterceptor implements SessionHandler.Interceptor {
 
