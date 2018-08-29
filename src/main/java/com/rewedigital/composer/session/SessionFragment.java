@@ -17,7 +17,7 @@ public class SessionFragment {
 
     private static final SessionFragment emptySession = new SessionFragment(new HashMap<>());
 
-    final SessionData data;
+    private final SessionData data;
 
     private SessionFragment(final Map<String, String> data) {
         this(new SessionData(data));
@@ -45,6 +45,10 @@ public class SessionFragment {
 
     public SessionFragment mergedWith(final SessionFragment other) {
         return new SessionFragment(data.mergedWith(other.data));
+    }
+    
+    SessionData data() {
+    	return this.data;
     }
 
     private static Map<String, String> toMap(final List<Map.Entry<String, String>> entries) {

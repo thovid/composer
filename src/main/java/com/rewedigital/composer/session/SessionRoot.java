@@ -72,7 +72,7 @@ public class SessionRoot {
 	}
 
 	public SessionRoot mergedWith(final SessionFragment other) {
-		final SessionData mergedData = data.mergedWith(other.data);
+		final SessionData mergedData = data.mergedWith(other.data());
 		final SessionData newData = getId().map(id -> mergedData.with(sessionIdKey, id)).orElse(mergedData);
 		final boolean newDirty = !data.equals(newData);
 		return new SessionRoot(newData, newDirty || dirty);
