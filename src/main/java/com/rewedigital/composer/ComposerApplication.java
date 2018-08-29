@@ -1,8 +1,8 @@
 package com.rewedigital.composer;
 
 import static com.rewedigital.composer.configuration.DefaultConfiguration.withDefaults;
+import static java.util.Arrays.asList;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 
@@ -27,57 +27,49 @@ import com.typesafe.config.Config;
 
 public class ComposerApplication {
 
-    private static final List<String> methods =
-        Arrays.asList("GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "OPTIONS", "PATCH");
+	public static void main(final String[] args) throws LoadingException {
+		HttpService.boot(bootstrapService(), args);
+	}
 
-    public static void main(final String[] args) throws LoadingException {
-        HttpService.boot(bootstrapService(), args);
-    }
+	private static Service bootstrapService() {
+		return bootstrap(HttpService::usingAppInit, (b, m) -> b.withModule(m)).withEnvVarPrefix("COMPOSER").build();
+	}
 
-    private static Service bootstrapService() {
-        return bootstrap(HttpService::usingAppInit, (b, m) -> b.withModule(m))
-            .withEnvVarPrefix("COMPOSER")
-            .build();
-    }
+	static <T> T bootstrap(final BiFunction<AppInit, String, T> init,
+			final BiFunction<T, ApolloModule, T> moduleAppender) {
+		T result = init.apply(Initializer::init, "composer");
+		for (final ApolloModule module : additionalModules()) {
+			result = moduleAppender.apply(result, module);
+		}
+		return result;
+	}
 
-    static <T> T bootstrap(final BiFunction<AppInit, String, T> init,
-        final BiFunction<T, ApolloModule, T> moduleAppender) {
-        T result = init.apply(Initializer::init, "composer");
-        for (final ApolloModule module : additionalModules()) {
-            result = moduleAppender.apply(result, module);
-        }
-        return result;
-    }
+	private static List<ApolloModule> additionalModules() {
+		return asList(WithIncomingHeadersClientDecoratingModule.create(),
+				ErrorHandlingClientDecoratingModule.create(), HttpCacheModule.create());
+	}
 
-    private static List<ApolloModule> additionalModules() {
-        return Arrays.asList(
-            WithIncomingHeadersClientDecoratingModule.create(), ErrorHandlingClientDecoratingModule.create(),
-            HttpCacheModule.create());
-    }
+	private static class Initializer {
 
-    private static class Initializer {
+		static void init(final Environment environment) {
+			final Config configuration = withDefaults(environment.config());
 
-        static void init(final Environment environment) {
-            final Config configuration = withDefaults(environment.config());
+			final ComposingRequestHandler handler = new ComposingRequestHandler(
+					new BackendRouting(configuration.getConfig("composer.routing")),
+					new RouteTypes(new ComposerFactory(configuration.getConfig("composer.html")),
+							new SessionAwareProxyClient()),
+					new CookieBasedSessionHandler.Factory(configuration.getConfig("composer.session")));
 
-            final ComposingRequestHandler handler =
-                new ComposingRequestHandler(
-                    new BackendRouting(configuration.getConfig("composer.routing")),
-                    new RouteTypes(
-                        new ComposerFactory(configuration.getConfig("composer.html")),
-                        new SessionAwareProxyClient()),
-                    new CookieBasedSessionHandler.Factory(configuration.getConfig("composer.session")));
+			registerRoutes(environment, handler, "/");
+			registerRoutes(environment, handler, "/<path:path>");
+		}
 
-            registerRoutes(environment, handler, "/");
-            registerRoutes(environment, handler, "/<path:path>");
-        }
-
-        private static void registerRoutes(final Environment environment, final ComposingRequestHandler handler,
-            final String uri) {
-            for (final String method : methods) {
-                environment.routingEngine().registerAutoRoute(
-                    Route.async(method, uri, handler::execute).withMiddleware(ProxyHeaderMiddleware::apply));
-            }
-        }
-    }
+		private static void registerRoutes(final Environment environment, final ComposingRequestHandler handler,
+				final String uri) {
+			for (final String method : asList("GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "OPTIONS", "PATCH")) {
+				environment.routingEngine().registerAutoRoute(
+						Route.async(method, uri, handler::execute).withMiddleware(ProxyHeaderMiddleware::apply));
+			}
+		}
+	}
 }
