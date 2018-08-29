@@ -45,8 +45,7 @@ public class RemoteHttpSessionInterceptor implements SessionHandler.Interceptor 
                 .map(p -> p.utf8()).map(p -> parse(p))
                 .orElse(Collections.emptyMap());
 
-        final SessionData mergedData = session.data().mergedWith(new SessionData(responseData));
-        return SessionRoot.of(mergedData.rawData());
+        return session.mergedWith(responseData);
     }
 
     private ByteString toJsonPayload(final SessionRoot session) {

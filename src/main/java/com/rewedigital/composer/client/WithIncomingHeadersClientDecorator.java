@@ -5,7 +5,7 @@ import static com.rewedigital.composer.util.Combiners.throwingCombiner;
 import java.util.Map;
 import java.util.Optional;
 
-import com.rewedigital.composer.session.SessionData;
+import com.rewedigital.composer.session.SessionRoot;
 import com.spotify.apollo.Request;
 import com.spotify.apollo.environment.ClientDecorator;
 import com.spotify.apollo.environment.IncomingRequestAwareClient;
@@ -29,6 +29,6 @@ public class WithIncomingHeadersClientDecorator implements ClientDecorator {
     }
 
     public boolean isNotSessionHeader(final Map.Entry<String, String> header) {
-        return !SessionData.isSessionEntry(header);
+        return !SessionRoot.isSessionEntry(header);
     }
 }
